@@ -4,6 +4,7 @@ from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtCore import QUrl
 from controllers.VideoOperatorController import VideoOperatorController
+from PyQt5.QtGui import QStandardItemModel
 from UI.CSSStyling import CSSStyling
 
 class VideoForm2(object):
@@ -39,15 +40,22 @@ class VideoForm2(object):
         
         self.horizontalLayout_2.addWidget(self.widget)
         
-        self.widget_3 = QtWidgets.QWidget(self.horizontalLayoutWidget)
-        self.widget_3.setObjectName("widget_3")
+        # self.widget_3 = QtWidgets.QWidget(self.horizontalLayoutWidget)
+        # self.widget_3.setObjectName("widget_3")
         
-        self.horizontalLayout_2.addWidget(self.widget_3)
+        # self.horizontalLayout_2.addWidget(self.widget_3)
         
         self.widget_2 = QtWidgets.QWidget(self.horizontalLayoutWidget)
         self.widget_2.setObjectName("widget_2")
         
+        # Кнопка для додавання ефекту
+        self.addEffectButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.addEffectButton.setObjectName("addEffectButton")
+        self.addEffectButton.clicked.connect(self.add_effect)  # Зв'язуємо з методом додавання ефекту
+        self.horizontalLayout_2.addWidget(self.addEffectButton)
+        
         self.horizontalLayout_2.addWidget(self.widget_2)
+        
         self.exportVideoButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -59,8 +67,8 @@ class VideoForm2(object):
         self.exportVideoButton.setObjectName("exportVideoButton")
         
         self.exportVideoButton.clicked.connect(self.export_video)
-        
         self.horizontalLayout_2.addWidget(self.exportVideoButton)
+        
         self.horizontalLayout_2.setStretch(0, 100)
         self.horizontalLayout_2.setStretch(1, 30)
         self.horizontalLayout_2.setStretch(2, 100)
@@ -96,11 +104,19 @@ class VideoForm2(object):
         self.horizontalLayout_3.addWidget(self.widget_6)
         self.listView = QtWidgets.QListView(self.horizontalLayoutWidget_2)
         self.listView.setObjectName("listView")
+        
+        
+        self.list_model = QStandardItemModel()
+        self.listView.setModel(self.list_model)
+        
+        main_controller.return_list_of_effects(self.list_model)
+        
         self.horizontalLayout_3.addWidget(self.listView)
         self.horizontalLayout_3.setStretch(0, 400)
         self.horizontalLayout_3.setStretch(1, 30)
         self.horizontalLayout_3.setStretch(2, 400)
 
+        
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
         
@@ -113,10 +129,11 @@ class VideoForm2(object):
         self.media_player.play()
         self.media_player.pause()
         
-        self.pushButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        self.returnBackButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        self.exportVideoButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        self.listView.setStyleSheet(CSSStyling.styleSheet_for_ListView())
+        # self.pushButton.setStyleSheet(CSSStyling.styleSheet_for_button())
+        # self.returnBackButton.setStyleSheet(CSSStyling.styleSheet_for_button())
+        # self.exportVideoButton.setStyleSheet(CSSStyling.styleSheet_for_button())
+        # self.listView.setStyleSheet(CSSStyling.styleSheet_for_ListView())
+        # self.addEffectButton.setStyleSheet(CSSStyling.styleSheet_for_button())
         
         self.returnBackButton.clicked.connect(
             lambda: self.returnBack(main_controller=main_controller)
@@ -126,8 +143,9 @@ class VideoForm2(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.returnBackButton.setText(_translate("Form", "Back"))
-        self.exportVideoButton.setText(_translate("Form", "Export Video"))
+        self.exportVideoButton.setText(_translate("Form", "Export"))
         self.pushButton.setText(_translate("Form", "⏵"))
+        self.addEffectButton.setText(_translate("Form", "Add Effect"))
         
     def play_video(self):
         if self.media_player.state() == QMediaPlayer.PlayingState:
@@ -160,3 +178,6 @@ class VideoForm2(object):
         self.media_player.setMedia(QMediaContent())
 
         main_controller.goBack()
+        
+    def add_effect():
+        return None

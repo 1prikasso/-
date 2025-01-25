@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QStandardItemModel
 from UI.CSSStyling import CSSStyling
 from PyQt5.QtWidgets import QFileDialog
 from views.VideoWidget import VideoWidget
@@ -102,14 +103,19 @@ class ChooseVideoForm(object):
         self.listView = QtWidgets.QListView(self.horizontalLayoutWidget_2)
         self.listView.setObjectName("listView")
         
+        self.list_model = QStandardItemModel()
+        self.listView.setModel(self.list_model)
+        
+        main_controller.return_list_of_effects(self.list_model)
+        
         self.horizontalLayout_3.addWidget(self.listView)
         self.horizontalLayout_3.setStretch(0, 400)
         self.horizontalLayout_3.setStretch(1, 30)
         self.horizontalLayout_3.setStretch(2, 400)
 
-        self.importClipButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        self.returnBackButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        self.exportVideoButton.setStyleSheet(CSSStyling.styleSheet_for_button())
+        # self.importClipButton.setStyleSheet(CSSStyling.styleSheet_for_button())
+        # self.returnBackButton.setStyleSheet(CSSStyling.styleSheet_for_button())
+        # self.exportVideoButton.setStyleSheet(CSSStyling.styleSheet_for_button())
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -118,12 +124,12 @@ class ChooseVideoForm(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.returnBackButton.setText(_translate("Form", "Back"))
-        self.exportVideoButton.setText(_translate("Form", "Export Video"))
-        self.importClipButton.setText(_translate("Form", "Import video"))
+        self.exportVideoButton.setText(_translate("Form", "Export"))
+        self.importClipButton.setText(_translate("Form", "Import"))
 
     def importVideo(self, main_controller):
         file_path, _ = QFileDialog.getOpenFileName(
-            None, "Select Video", "", "Video Files (*.mp4 *.avi *.mov, *.*)"
+            None, "Select Video", "", "Video Files (*.mp4 *.avi *.mov)"
         )
         if file_path:
             main_controller.changeWidgetOfMainWindow(VideoWidget, file_path=file_path)

@@ -1,4 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
+from PyQt5.QtGui import QStandardItem
 from views.StartWidget import StartWidget
 from controllers.VideoOperatorController import VideoOperatorController
 
@@ -39,3 +40,9 @@ class MainController():
             previous_state = self.history[-1]
             
             self.changeWidgetOfMainWindow(previous_state, False)
+            
+    def return_list_of_effects(self, list_model):
+        items = ["Add music", "Crop Video", "Trim Video"]
+        for item_text in items:
+            item = QStandardItem(item_text)
+            list_model.appendRow(item)
