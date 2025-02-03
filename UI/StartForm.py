@@ -1,6 +1,5 @@
-from PyQt5 import QtCore, QtGui, QtWidgets 
+from PyQt5 import QtCore, QtWidgets 
 from views.ChooseVideoWidget import ChooseVideoWidget
-from UI.CSSStyling import CSSStyling
 
 class StartForm(object):
     def setupUi(self, Form, main_controller):
@@ -13,10 +12,7 @@ class StartForm(object):
 
         self.pushButton.clicked.connect(
             lambda: main_controller.changeWidgetOfMainWindow(ChooseVideoWidget)
-        )
-        
-        # self.pushButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        
+        )        
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 

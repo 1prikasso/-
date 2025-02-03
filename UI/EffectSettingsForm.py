@@ -1,17 +1,16 @@
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QProgressDialog
 from PyQt5.QtCore import QUrl
 from controllers.VideoOperatorController import VideoOperatorController
-from views.EffectSettingsWidget import EffectSettingsWidget
-
 from UI.classes.EffectsListModel import EffectsListModel
 
-class VideoForm2(object):
-    def setupUi(self, Form, main_controller, video):
+class EffectSettingsForm(object):
+    def setupUi(self, Form, main_controller, video, effect_object):
         self.input_video_path = video
         self.Form = Form
+        self.effect_object = effect_object
         
         Form.setObjectName("Form")
         Form.resize(800, 600)
@@ -41,21 +40,12 @@ class VideoForm2(object):
         
         self.horizontalLayout_2.addWidget(self.widget)
         
-        
-        
         self.widget_2 = QtWidgets.QWidget(self.horizontalLayoutWidget)
         self.widget_2.setObjectName("widget_2")
         
         self.addEffectButton = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.addEffectButton.setDisabled(True)
         self.addEffectButton.setObjectName("addEffectButton")
-        
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.returnBackButton.sizePolicy().hasHeightForWidth())
-        
-        self.returnBackButton.setSizePolicy(sizePolicy)
-        
         self.addEffectButton.clicked.connect(lambda: self.add_effect(main_controller=main_controller, video=video))
         self.horizontalLayout_2.addWidget(self.addEffectButton)
         
@@ -99,7 +89,9 @@ class VideoForm2(object):
         self.pushButton.setGeometry(QtCore.QRect(133+8-2, int(320*1.25), 75, 30))
         self.pushButton.setObjectName("pushButton")
        
+        
         self.horizontalLayout_3.addWidget(self.workWidget)
+        
         self.widget_6 = QtWidgets.QWidget(self.horizontalLayoutWidget_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -109,20 +101,23 @@ class VideoForm2(object):
         self.widget_6.setMaximumSize(QtCore.QSize(30, 16777215))
         self.widget_6.setObjectName("widget_6")
         self.horizontalLayout_3.addWidget(self.widget_6)
-       
-        self.listView = QtWidgets.QListView(self.horizontalLayoutWidget_2)
-        self.listView.setObjectName("listView")
         
+        self.effectsContainer = QtWidgets.QWidget(self.horizontalLayoutWidget_2)
+        self.effectsContainer.setObjectName("effectsContainer")
+        self.effectsLayout = QtWidgets.QVBoxLayout(self.effectsContainer)
+        self.effectsLayout.setObjectName("effectsLayout")
         
-        self.list_model = EffectsListModel(main_controller.return_list_of_effects())
-        self.listView.setModel(self.list_model)
+        self.effectsLayout.addWidget(effect_object.return_settings_widget(video_path=self.input_video_path, main_controller=main_controller))
+        self.applyEffectButton = QtWidgets.QPushButton("Apply")
+        self.applyEffectButton.clicked.connect(self.apply)
+        self.effectsLayout.addWidget(self.applyEffectButton)
+            
         
-        self.horizontalLayout_3.addWidget(self.listView)
+        self.horizontalLayout_3.addWidget(self.effectsContainer)
         self.horizontalLayout_3.setStretch(0, 400)
         self.horizontalLayout_3.setStretch(1, 30)
         self.horizontalLayout_3.setStretch(2, 400)
 
-        
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
         
@@ -133,7 +128,6 @@ class VideoForm2(object):
         self.media_player.setMedia(QMediaContent(QUrl.fromLocalFile(video)))
         self.media_player.play()
         self.media_player.pause()
-        
         
         self.returnBackButton.clicked.connect(
             lambda: self.returnBack(main_controller=main_controller)
@@ -155,16 +149,12 @@ class VideoForm2(object):
             self.media_player.play()
             self.pushButton.setText("||")
             
-            
     def export_video(self):
         folder = QFileDialog.getExistingDirectory(self.Form, "Select Folder")
-
-        self.media_player.stop()
 
         if folder:
             input_video_path = self.input_video_path
             output_video_path = f'{folder}\\trimmed_video.mp4'
-            
             
             savedpath = VideoOperatorController.save_video_to_path(input_video_path, output_video_path)
             
@@ -175,29 +165,12 @@ class VideoForm2(object):
             msg.exec_()
             
     def returnBack(self, main_controller):
+        self.media_player.pause()
         self.media_player.setMedia(QMediaContent())
+        main_controller.goBack(self.input_video_path)
 
-        main_controller.goBack()
-        
-    def add_effect(self, main_controller, video):
-        selected_index = self.listView.selectedIndexes()
-        
-        self.media_player.setMedia(QMediaContent())
-        
-        if selected_index:
-            index = selected_index[0]
-            effect_object = self.list_model.effects_objects[index.row()]
+    def apply(self):
+        if self.effect_object.can_be_applied:           
+            self.effect_object.applyEffect()
             
-            if self.media_player.state() == QMediaPlayer.PlayingState:
-                self.media_player.pause()
-                self.pushButton.setText("⏵")
-            
-            main_controller.changeWidgetOfMainWindow(widget_class=EffectSettingsWidget, file_path=video, effect_object=effect_object, appendHistory=False)
-            
-            
-        else:
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Warning)
-            msg.setText("You must select an effect before applying!")
-            msg.setWindowTitle("Warning")
-            msg.exec_()
+

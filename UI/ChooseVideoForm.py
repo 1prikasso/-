@@ -1,8 +1,7 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QStandardItemModel
-from UI.CSSStyling import CSSStyling
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from views.VideoWidget import VideoWidget
+from UI.classes.EffectsListModel import EffectsListModel
 
 class ChooseVideoForm(object):
     def setupUi(self, Form, main_controller):
@@ -28,7 +27,6 @@ class ChooseVideoForm(object):
         self.returnBackButton.setSizePolicy(sizePolicy)
         self.returnBackButton.setObjectName("returnBackButton")
         
-        # connect goback button to goback method
         self.returnBackButton.clicked.connect(
             lambda: main_controller.goBack()
         )
@@ -100,22 +98,18 @@ class ChooseVideoForm(object):
         
         self.horizontalLayout_3.addWidget(self.widget_6)
         
+        
         self.listView = QtWidgets.QListView(self.horizontalLayoutWidget_2)
         self.listView.setObjectName("listView")
         
-        self.list_model = QStandardItemModel()
-        self.listView.setModel(self.list_model)
-        
-        main_controller.return_list_of_effects(self.list_model)
+        self.list_model = EffectsListModel(main_controller.return_list_of_effects())
+        self.listView.setModel(self.list_model) 
         
         self.horizontalLayout_3.addWidget(self.listView)
         self.horizontalLayout_3.setStretch(0, 400)
         self.horizontalLayout_3.setStretch(1, 30)
         self.horizontalLayout_3.setStretch(2, 400)
 
-        # self.importClipButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        # self.returnBackButton.setStyleSheet(CSSStyling.styleSheet_for_button())
-        # self.exportVideoButton.setStyleSheet(CSSStyling.styleSheet_for_button())
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
