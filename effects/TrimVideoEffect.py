@@ -23,7 +23,6 @@ class TrimVideoEffect:
 
         msg_box.show()
         
-        
         self.video = mp.VideoFileClip(self.video_path)
 
         trimmed_video = self.video.subclipped(self.start_time, self.end_time)

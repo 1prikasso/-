@@ -10,13 +10,11 @@ class VideoOperatorController():
             msg_box = QMessageBox()
             msg_box.setWindowTitle("Processing")
             msg_box.setText("Please wait... Saving video...")
-            msg_box.setStandardButtons(QMessageBox.NoButton)  # Без кнопок, лише повідомлення
+            msg_box.setStandardButtons(QMessageBox.NoButton)
             msg_box.setIcon(QMessageBox.Information)
 
-            # Відображаємо повідомлення
             msg_box.show()
             
-            # Обрізаємо відео і зберігаємо його у вибрану папку
             ffmpeg.input(input_video_path).output(output_path).run()
             
             msg_box.close()

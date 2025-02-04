@@ -12,9 +12,10 @@ class OverLayVideoEffect:
         self.use_overlay_audio = False
 
     def applyEffect(self):
-        from moviepy import VideoFileClip, CompositeVideoClip, concatenate_audioclips
+        from moviepy import VideoFileClip, CompositeVideoClip, CompositeAudioClip
         from views.VideoWidget import VideoWidget
         from PyQt5.QtWidgets import QMessageBox
+        import datetime
         import os
 
         msg_box = QMessageBox()
@@ -22,62 +23,68 @@ class OverLayVideoEffect:
         msg_box.setText("Please wait... Processing video...")
         msg_box.setStandardButtons(QMessageBox.NoButton)
         msg_box.setIcon(QMessageBox.Information)
-
         msg_box.show()
 
         if not self.video_file or not self.video_path:
+            msg_box.close()
             return
 
-        # Основне відео
         main_clip = VideoFileClip(self.video_path)
-
-        # Накладене відео, яке розтягується по ширині основного
         overlay_clip = VideoFileClip(self.video_file).resized(width=main_clip.w)
-
-        # Обрізаємо накладене відео до потрібних відрізків
         overlay_clip = overlay_clip.subclipped(self.start_time, self.end_time)
 
-        # Позиція накладеного відео
         position_mapping = {
             "top": ("center", 0),
+            "middle": ("center", "center"),
             "bottom": ("center", "bottom"),
         }
-        overlay_clip = overlay_clip.with_position(position_mapping[self.position])
+        overlay_clip = overlay_clip.with_position(position_mapping[self.position]).with_start(self.insert_time)
 
-        # Час початку накладеного відео
-        overlay_clip = overlay_clip.with_start(self.insert_time)
+        if overlay_clip.audio:
+            overlay_audio = overlay_clip.audio.subclipped(self.start_time, self.end_time)
+        else:
+            overlay_audio = None
 
-        # Налаштування аудіо
         final_audio = None
+        
         if self.use_main_audio and self.use_overlay_audio:
-            final_audio = concatenate_audioclips([main_clip.audio, overlay_clip.audio])
-        elif self.use_overlay_audio:
-            final_audio = overlay_clip.audio
+            final_audio = CompositeAudioClip([main_clip.audio, overlay_audio]) if overlay_audio else main_clip.audio
+        
+        elif self.use_overlay_audio and overlay_audio:
+            from moviepy.audio.AudioClip import AudioArrayClip
+            import numpy as np
+            
+            # Розраховуємо довжину мовчазного аудіо
+            silence_duration = int(overlay_audio.fps * self.insert_time)  # Тривалість в кількості аудіо кадрів
+            
+            # Створюємо двовимірний масив нулів для мовчазного аудіо
+            silence = np.zeros((silence_duration, 1))  # Додано вимір для одного каналу
+            
+            # Створюємо AudioArrayClip з мовчазним аудіо
+            silence_clip = AudioArrayClip(silence, fps=overlay_audio.fps)
+            
+            # Складуємо фінальний аудіо кліп, додаючи мовчазний аудіо
+            final_audio = CompositeAudioClip([silence_clip, overlay_audio])
+
+
         elif self.use_main_audio:
             final_audio = main_clip.audio
 
-        # Створення фінального відео
-        final_clip = CompositeVideoClip([main_clip, overlay_clip]).with_audio(final_audio)
+        overlay_clip = overlay_clip.with_audio(overlay_audio) if overlay_audio else overlay_clip
+        final_clip = CompositeVideoClip([main_clip, overlay_clip])
+        final_clip = final_clip.with_audio(final_audio.with_duration(main_clip.duration)) if final_audio else final_clip
 
-        # Визначаємо шлях до папки temp
         output_folder = os.path.join(os.getcwd(), 'temp')
+        os.makedirs(output_folder, exist_ok=True)
 
-        # Перевірка наявності папки temp
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = os.path.join(output_folder, f"output_overlay_{timestamp}.mp4")
 
-        # Шлях для збереження відео
-        output_path = os.path.join(output_folder, "output_overlay.mp4")
-
-        # Збереження відео
         final_clip.write_videofile(output_path, codec="libx264", audio_codec="aac")
-
+        
         msg_box.close()
-
-        # Відкриваємо відео у відео-виджеті
+        
         self.main_controller.changeWidgetOfMainWindow(VideoWidget, file_path=output_path)
-
-
 
     def return_settings_widget(self, video_path, main_controller):
         from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog, QLabel, QCheckBox
@@ -96,7 +103,11 @@ class OverLayVideoEffect:
 
         if self.video_file:
             from moviepy import VideoFileClip
-            self.select_video_label.setText(self.video_file.split("/")[-1])
+            if len(self.video_file.split("/")[-1]) > 19:
+                self.select_video_label.setText(f"..{self.video_file.split("/")[-1][-13:]}")
+            else:
+                self.select_video_label.setText(f"{self.video_file.split("/")[-1]}")
+                
             self.can_be_applied = True
             self.video_duration = VideoFileClip(self.video_file).duration
 
@@ -126,7 +137,7 @@ class OverLayVideoEffect:
         layout.addWidget(self.main_audio_checkbox)
         layout.addWidget(self.overlay_audio_checkbox)
 
-        self.position_button = QPushButton("Down")
+        self.position_button = QPushButton("Bottom")
         self.position_button.setFixedHeight(40)
         self.position_button.clicked.connect(self.toggle_position)
         layout.addWidget(self.position_button)
@@ -169,9 +180,7 @@ class OverLayVideoEffect:
         self.use_overlay_audio = bool(state)
 
     def toggle_position(self):
-        if self.position == "bottom":
-            self.position = "top"
-            self.position_button.setText("Up")
-        else:
-            self.position = "bottom"
-            self.position_button.setText("Down")
+        positions = ["bottom", "middle", "top"]
+        current_index = positions.index(self.position)
+        self.position = positions[(current_index + 1) % len(positions)]
+        self.position_button.setText(self.position.capitalize())

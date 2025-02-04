@@ -170,6 +170,10 @@ class EffectSettingsForm(object):
         main_controller.goBack(self.input_video_path)
 
     def apply(self):
+        
+        self.media_player.pause()
+        self.media_player.setMedia(QMediaContent())
+        
         if self.effect_object.can_be_applied:           
             self.effect_object.applyEffect()
             
