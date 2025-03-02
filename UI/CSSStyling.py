@@ -26,7 +26,7 @@ QWidget#effectsContainer{
     
     background-color: #ddd2fc; /* Темний фон */
     border: none; /* Видалення рамок */
-    border-radius: 18px;
+    border-radius: 10px;
     padding: 10px;
     color: #121212;
     font-size: 14pt;

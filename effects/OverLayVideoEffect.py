@@ -54,16 +54,15 @@ class OverLayVideoEffect:
             from moviepy.audio.AudioClip import AudioArrayClip
             import numpy as np
             
-            # Розраховуємо довжину мовчазного аудіо
-            silence_duration = int(overlay_audio.fps * self.insert_time)  # Тривалість в кількості аудіо кадрів
+            if self.insert_time <= 0:
+                self.insert_time = 0.1
+    
+            silence_duration = int(overlay_audio.fps * self.insert_time)
             
-            # Створюємо двовимірний масив нулів для мовчазного аудіо
-            silence = np.zeros((silence_duration, 1))  # Додано вимір для одного каналу
+            silence = np.zeros((silence_duration, 1))
             
-            # Створюємо AudioArrayClip з мовчазним аудіо
             silence_clip = AudioArrayClip(silence, fps=overlay_audio.fps)
             
-            # Складуємо фінальний аудіо кліп, додаючи мовчазний аудіо
             final_audio = CompositeAudioClip([silence_clip, overlay_audio])
 
 
